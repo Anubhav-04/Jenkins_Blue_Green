@@ -11,7 +11,7 @@ pipeline {
     BLUE_ENV   = 'blue'
     GREEN_ENV  = 'green'
     ACTIVE     = 'blue'
-    DEPLOY_HOST = 'prod.example.com'
+    DEPLOY_HOST = '127.0.0.1'
   }
   tools {
         nodejs "NodeJS"   // Use the NodeJS version configured in Jenkins
