@@ -13,6 +13,9 @@ pipeline {
     ACTIVE     = 'blue'
     DEPLOY_HOST = 'prod.example.com'
   }
+  tools {
+        nodejs "NodeJS"   // Use the NodeJS version configured in Jenkins
+    }
 
   stages {
     stage('Checkout') {
