@@ -11,7 +11,7 @@ pipeline {
     BLUE_ENV   = 'blue'
     GREEN_ENV  = 'green'
     ACTIVE     = 'blue'
-    DEPLOY_HOST = '127.0.0.1'
+    DEPLOY_HOST = 'localhost'
   }
   tools {
         nodejs "NodeJS"   // Use the NodeJS version configured in Jenkins
@@ -67,9 +67,9 @@ pipeline {
       steps {
         // Copy artifact to green slot and stage it under /opt/green
         sh '''
-          ssh ops@${DEPLOY_HOST} 'sudo mkdir -p /opt/${GREEN_ENV} && sudo chown -R ops:ops /opt/${GREEN_ENV}'
-          scp build/artifact.tar.gz ops@${DEPLOY_HOST}:/opt/${GREEN_ENV}/artifact.tar.gz
-          ssh ops@${DEPLOY_HOST} '
+          ssh -p 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /opt/${GREEN_ENV} && sudo chown -R ops:ops /opt/${GREEN_ENV}'
+          scp build/artifact.tar.gz dev@${DEPLOY_HOST}:/opt/${GREEN_ENV}/artifact.tar.gz
+          ssh dev@${DEPLOY_HOST} '
             set -e
             cd /opt/${GREEN_ENV}
             rm -rf ./current && mkdir -p ./current
@@ -78,7 +78,7 @@ pipeline {
         '''
         // If serving via a lightweight static server (e.g., nginx or node serve), restart the green service
         sh '''
-          ssh ops@${DEPLOY_HOST} '
+          ssh -p 2251 dev@${DEPLOY_HOST} '
             set -e
             # For static hosting behind NGINX you may not need a service.
             # Uncomment if you run a green-specific service (e.g., app-green) to serve /opt/green/current:
@@ -100,7 +100,7 @@ pipeline {
       steps {
         // NGINX upstream flip via symlink then reload
         sh """
-          ssh ops@${DEPLOY_HOST} 'set -e
+          ssh -p 2251 dev@${DEPLOY_HOST} 'set -e
             sudo ln -sfn /etc/nginx/upstreams.${GREEN_ENV}.conf /etc/nginx/conf.d/upstreams.active.conf
             sudo nginx -t
             sudo nginx -s reload
@@ -120,7 +120,7 @@ pipeline {
       steps {
         // If you run a blue-serving process, stop it; if purely static behind NGINX, you can skip
         sh """
-          ssh ops@${DEPLOY_HOST} 'set -e
+          ssh -p 2251 dev@${DEPLOY_HOST} 'set -e
             # Optional: stop the blue app service if used
             # sudo systemctl stop app-${BLUE_ENV} || true
           '
@@ -134,7 +134,7 @@ pipeline {
       echo 'Switch failed — rolling back to BLUE'
       // Point NGINX back to blue and (optionally) restart blue service
       sh """
-        ssh ops@${DEPLOY_HOST} 'set -e
+        ssh -p 2251 dev@${DEPLOY_HOST} 'set -e
           sudo ln -sfn /etc/nginx/upstreams.${BLUE_ENV}.conf /etc/nginx/conf.d/upstreams.active.conf
           sudo nginx -t
           sudo nginx -s reload
