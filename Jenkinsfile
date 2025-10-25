@@ -9,7 +9,7 @@ pipeline {
         stage('Hello') {
             steps {
                 sh '''
-                    ssh -p 2251 dev@127.0.0.1 'cd /dev && echo "Hello from jenkins" > hello.txt'
+                    ssh -i id_ed25519.pub -p 2251 dev@127.0.0.1 'cd /home/dev && echo "Hello from jenkins" > jenkins.txt'
                 '''
             }
         }
