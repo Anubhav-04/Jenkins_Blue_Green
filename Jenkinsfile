@@ -10,7 +10,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['dev-ssh-key-id']) {
                 sh '''
-                    ssh -o StrictHostKeyChecking=no -p 2251 dev@127.0.0.1 'cd /home/dev && echo "Hello from jenkins" > jenkins.txt'
+                    nc -vz 127.0.0.1 2251
                 '''
             }
             }
