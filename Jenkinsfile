@@ -67,11 +67,11 @@ pipeline {
       steps {
         // Copy artifact to green slot and stage it under /opt/green
         sh '''
-          ssh -p 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /opt/${GREEN_ENV} && sudo chown -R ops:ops /opt/${GREEN_ENV}'
-          scp build/artifact.tar.gz dev@${DEPLOY_HOST}:/opt/${GREEN_ENV}/artifact.tar.gz
+          ssh -p 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /dev/${GREEN_ENV} && sudo chown -R dev:dev /dev/${GREEN_ENV}'
+          scp build/artifact.tar.gz dev@${DEPLOY_HOST}:/dev/${GREEN_ENV}/artifact.tar.gz
           ssh dev@${DEPLOY_HOST} '
             set -e
-            cd /opt/${GREEN_ENV}
+            cd /dev/${GREEN_ENV}
             rm -rf ./current && mkdir -p ./current
             tar -xzf artifact.tar.gz -C ./current
           '
@@ -81,7 +81,7 @@ pipeline {
           ssh -p 2251 dev@${DEPLOY_HOST} '
             set -e
             # For static hosting behind NGINX you may not need a service.
-            # Uncomment if you run a green-specific service (e.g., app-green) to serve /opt/green/current:
+            # Uncomment if you run a green-specific service (e.g., app-green) to serve /dev/green/current:
             # sudo systemctl restart app-${GREEN_ENV} || true
           '
         '''
