@@ -68,8 +68,8 @@ pipeline {
         // Copy artifact to green slot and stage it under /opt/green
         sshagent(credentials: ['dev-ssh-key-id']) {
         sh '''
-          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /dev/${GREEN_ENV} && sudo chown -R dev:dev /dev/${GREEN_ENV}'
-          scp -o StrictHostKeyChecking=no build/artifact.tar.gz -p 2251 dev@${DEPLOY_HOST}:/dev/${GREEN_ENV}/artifact.tar.gz
+          ssh -o StrictHostKeyChecking=no -P 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /dev/${GREEN_ENV} && sudo chown -R dev:dev /dev/${GREEN_ENV}'
+          scp -o StrictHostKeyChecking=no build/artifact.tar.gz -P 2251 dev@${DEPLOY_HOST}:/dev/${GREEN_ENV}/artifact.tar.gz
         '''
         // If serving via a lightweight static server (e.g., nginx or node serve), restart the green service
       }
