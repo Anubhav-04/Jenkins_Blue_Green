@@ -62,8 +62,7 @@ pipeline {
         // Copy artifact to green slot and stage it under /opt/green
         sshagent(credentials: ['dev-ssh-key-id']) {
         sh '''
-          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /dev/${GREEN_ENV} && sudo chown -R dev:dev /dev/${GREEN_ENV}'
-          sudo cp /dist /dev/${GREEN_ENV}
+          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'mkdir -p /dev/${GREEN_ENV} && cp /dist /dev/${GREEN_ENV}'
         '''
       }
       }
