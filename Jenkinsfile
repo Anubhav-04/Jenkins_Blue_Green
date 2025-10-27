@@ -69,7 +69,7 @@ pipeline {
         sshagent(credentials: ['dev-ssh-key-id']) {
         sh '''
           ssh -o StrictHostKeyChecking=no -P 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /dev/${GREEN_ENV} && sudo chown -R dev:dev /dev/${GREEN_ENV}'
-          scp -o StrictHostKeyChecking=no build/artifact.tar.gz -P 2251 dev@${DEPLOY_HOST}:/dev/${GREEN_ENV}/artifact.tar.gz
+          scp -o StrictHostKeyChecking=no -o IdentitiesOnly=yes build/artifact.tar.gz -P 2251 dev@${DEPLOY_HOST}:/dev/${GREEN_ENV}/artifact.tar.gz
         '''
         // If serving via a lightweight static server (e.g., nginx or node serve), restart the green service
       }
