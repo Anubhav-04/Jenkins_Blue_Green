@@ -55,8 +55,8 @@ pipeline {
         // Copy artifact to green slot and stage it under /opt/green
         sshagent(credentials: ['dev-ssh-key-id']) {
         sh '''
-          ssh -o StrictHostKeyChecking=no -p 2251 dev@host.docker.internal 'sudo mkdir -p /home/dev/green $$ exit'
-          scp -o StrictHostKeyChecking=no -o IdentitiesOnly=yes /dist  -p 2251 dev@host.docker.internal:/home/dev/green
+          ssh -o StrictHostKeyChecking=no -p 2251 dev@host.docker.internal 'sudo mkdir -p green $$ sudo chmod 700 green && exit'
+          scp -P 2251 -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i dev-ssh-key-id /dist dev@host.docker.internal:/home/dev/green
         '''
         // If serving via a lightweight static server (e.g., nginx or node serve), restart the green service
       }
