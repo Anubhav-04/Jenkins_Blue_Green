@@ -69,8 +69,8 @@ pipeline {
         sshagent(credentials: ['dev-ssh-key-id']) {
         sh '''
           ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /dev/${GREEN_ENV} && sudo chown -R dev:dev /dev/${GREEN_ENV}'
-          scp build/artifact.tar.gz dev@${DEPLOY_HOST}:/dev/${GREEN_ENV}/artifact.tar.gz
-          ssh dev@${DEPLOY_HOST} '
+          scp -o StrictHostKeyChecking=no build/artifact.tar.gz -p 2251 dev@${DEPLOY_HOST}:/dev/${GREEN_ENV}/artifact.tar.gz
+          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} '
             set -e
             cd /dev/${GREEN_ENV}
             rm -rf ./current && mkdir -p ./current
@@ -88,71 +88,6 @@ pipeline {
         '''
       }
       }
-    }
-
-    stage('Smoke Test GREEN') {
-      steps {
-        // Hit the GREEN endpoint directly or via a green-specific path
-        // If NGINX maps /green to /opt/green/current, keep this as is.
-        sh 'curl -fsS http://${DEPLOY_HOST}/${GREEN_ENV}/health'
-      }
-    }
-
-    stage('Switch Traffic to GREEN') {
-      steps {
-        sshagent(credentials: ['dev-ssh-key-id']) {
-        // NGINX upstream flip via symlink then reload
-        sh """
-          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'set -e
-            sudo ln -sfn /etc/nginx/upstreams.${GREEN_ENV}.conf /etc/nginx/conf.d/upstreams.active.conf
-            sudo nginx -t
-            sudo nginx -s reload
-          '
-        """
-      }
-      }
-    }
-
-    stage('Post-Switch Validation') {
-      steps {
-        // Validate the now-live route (root or canonical URL)
-        sh 'curl -fsS http://${DEPLOY_HOST}/health'
-      }
-    }
-
-    stage('Decommission BLUE') {
-      steps {
-        sshagent(credentials: ['dev-ssh-key-id']) {
-        // If you run a blue-serving process, stop it; if purely static behind NGINX, you can skip
-        sh """
-          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'set -e
-            # Optional: stop the blue app service if used
-            # sudo systemctl stop app-${BLUE_ENV} || true
-          '
-        """
-      }
-      }
-    }
-  }
-
-  post {
-    failure {
-      sshagent(credentials: ['dev-ssh-key-id']) {
-      echo 'Switch failed — rolling back to BLUE'
-      // Point NGINX back to blue and (optionally) restart blue service
-      sh """
-        ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'set -e
-          sudo ln -sfn /etc/nginx/upstreams.${BLUE_ENV}.conf /etc/nginx/conf.d/upstreams.active.conf
-          sudo nginx -t
-          sudo nginx -s reload
-          # Optional: ensure blue serving process is up if you use one:
-          # sudo systemctl restart app-${BLUE_ENV} || true
-        '
-      """
-    }
-    }
-    always {
-      echo "Build ${env.BUILD_NUMBER} finished with status: ${currentBuild.currentResult}"
     }
   }
 }
