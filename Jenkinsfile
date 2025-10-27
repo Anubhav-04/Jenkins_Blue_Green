@@ -47,12 +47,6 @@ pipeline {
     stage('Build') {
       steps {
         sh 'npm run build'         // Produces dist/
-        sh '''
-          mkdir -p build
-          tar -C dist -czf build/artifact.tar.gz .
-          echo "Created build/artifact.tar.gz"
-        '''
-        archiveArtifacts artifacts: 'build/artifact.tar.gz', onlyIfSuccessful: true
       }
     }
 
@@ -61,7 +55,8 @@ pipeline {
         // Copy artifact to green slot and stage it under /opt/green
         sshagent(credentials: ['dev-ssh-key-id']) {
         sh '''
-          ssh -o StrictHostKeyChecking=no -p 2251 dev@host.docker.internal 'cd /home/dev && echo "Hello from jenkins pipeline" > jenkins.txt'
+          ssh -o StrictHostKeyChecking=no -p 2251 dev@host.docker.internal 'sudo mkdir -p /home/dev/green $$ exit'
+          scp -o StrictHostKeyChecking=no -o IdentitiesOnly=yes /dist  -p 2251 dev@host.docker.internal:/home/dev/green
         '''
         // If serving via a lightweight static server (e.g., nginx or node serve), restart the green service
       }
