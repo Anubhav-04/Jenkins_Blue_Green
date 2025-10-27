@@ -54,12 +54,6 @@ pipeline {
     stage('Build') {
       steps {
         sh 'npm run build'         // Produces dist/
-        sh '''
-          mkdir -p build
-          tar -C dist -czf build/artifact.tar.gz .
-          echo "Created build/artifact.tar.gz"
-        '''
-        archiveArtifacts artifacts: 'build/artifact.tar.gz', onlyIfSuccessful: true
       }
     }
 
@@ -69,22 +63,7 @@ pipeline {
         sshagent(credentials: ['dev-ssh-key-id']) {
         sh '''
           ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /dev/${GREEN_ENV} && sudo chown -R dev:dev /dev/${GREEN_ENV}'
-          scp -o StrictHostKeyChecking=no build/artifact.tar.gz -p 2251 dev@${DEPLOY_HOST}:/dev/${GREEN_ENV}/artifact.tar.gz
-          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} '
-            set -e
-            cd /dev/${GREEN_ENV}
-            rm -rf ./current && mkdir -p ./current
-            tar -xzf artifact.tar.gz -C ./current
-          '
-        '''
-        // If serving via a lightweight static server (e.g., nginx or node serve), restart the green service
-        sh '''
-          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} '
-            set -e
-            # For static hosting behind NGINX you may not need a service.
-            # Uncomment if you run a green-specific service (e.g., app-green) to serve /dev/green/current:
-            # sudo systemctl restart app-${GREEN_ENV} || true
-          '
+          sudo cp /dist /dev/${GREEN_ENV}
         '''
       }
       }
