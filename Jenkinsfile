@@ -54,6 +54,12 @@ pipeline {
     stage('Build') {
       steps {
         sh 'npm run build'         // Produces dist/
+        sh '''
+          mkdir -p build
+          tar -C dist -czf build/artifact.tar.gz .
+          echo "Created build/artifact.tar.gz"
+        '''
+        archiveArtifacts artifacts: 'build/artifact.tar.gz', onlyIfSuccessful: true
       }
     }
 
@@ -62,8 +68,10 @@ pipeline {
         // Copy artifact to green slot and stage it under /opt/green
         sshagent(credentials: ['dev-ssh-key-id']) {
         sh '''
-          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'mkdir -p /dev/${GREEN_ENV} && cp /dist /dev/${GREEN_ENV}'
+          ssh -o StrictHostKeyChecking=no -p 2251 dev@${DEPLOY_HOST} 'sudo mkdir -p /dev/${GREEN_ENV} && sudo chown -R dev:dev /dev/${GREEN_ENV}'
+          scp -o StrictHostKeyChecking=no build/artifact.tar.gz -p 2251 dev@${DEPLOY_HOST}:/dev/${GREEN_ENV}/artifact.tar.gz
         '''
+        // If serving via a lightweight static server (e.g., nginx or node serve), restart the green service
       }
       }
     }
