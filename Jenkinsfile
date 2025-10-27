@@ -24,13 +24,6 @@ pipeline {
       }
     }
 
-    stage('Node Version & Cache') {
-      steps {
-        sh 'node -v || true'
-        sh 'npm -v || true'
-      }
-    }
-
     stage('Install') {
       steps {
         // Use npm ci for clean, reproducible installs
@@ -68,7 +61,7 @@ pipeline {
         // Copy artifact to green slot and stage it under /opt/green
         sshagent(credentials: ['dev-ssh-key-id']) {
         sh '''
-          ssh -o StrictHostKeyChecking=no -P 2251 dev@${DEPLOY_HOST}
+          ssh -o StrictHostKeyChecking=no -p 2251 dev@host.docker.internal 'cd /home/dev && echo "Hello from jenkins pipeline" > jenkins.txt'
         '''
         // If serving via a lightweight static server (e.g., nginx or node serve), restart the green service
       }
